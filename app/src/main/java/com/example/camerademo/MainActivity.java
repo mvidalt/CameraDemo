@@ -53,14 +53,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         surfaceView = findViewById(R.id.surfaceView);
         button = findViewById(R.id.button);
-
-        // Solicitar permisos de cámara y escritura externa en tiempo de ejecución
         String[] permissions = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
         if (!hasPermissions(permissions)) {
             ActivityCompat.requestPermissions(this, permissions, 100);
         }
-
-        // Inicializar la SurfaceView y configurar el SurfaceHolder
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
 
@@ -82,20 +78,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
             Bitmap bitmap = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
-            // imageView.setImageBitmap(bitmap); // Elimina esta línea si no es necesaria
 
             saveImageToExternalStorage(bitmap);
 
-            // Oculta la SurfaceView después de tomar la foto
             surfaceView.setVisibility(View.GONE);
         }
     }
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        // Verificar si se otorgaron todos los permisos
-        // Permiso otorgado, puedes continuar con la operación de la cámara
-        // Permiso denegado, manejar en consecuencia (por ejemplo, mostrar un mensaje o deshabilitar la funcionalidad de la cámara)
     }
 
     private void saveImageToExternalStorage(Bitmap bitmap) {
@@ -122,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         try {
             FileOutputStream out = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
             out.flush();
             out.close();
 
@@ -141,21 +132,18 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
 
     private void onClick(View v) {
-        // Llama a un método para capturar la imagen directamente desde la vista previa de la cámara
         captureImage();
 
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        // Abre la cámara cuando la SurfaceView está creada
         camera = Camera.open();
 
         if (camera != null) {
             try {
                 Camera.Parameters parameters = camera.getParameters();
 
-                // Determina la orientación actual del dispositivo
                 int rotation = getWindowManager().getDefaultDisplay().getRotation();
                 int degrees = 0;
 
@@ -174,13 +162,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                         break;
                 }
 
-                // Ajusta la orientación de la cámara
                 Camera.CameraInfo info = new Camera.CameraInfo();
                 Camera.getCameraInfo(Camera.CameraInfo.CAMERA_FACING_BACK, info);
                 int result = (info.orientation - degrees + 360) % 360;
                 camera.setDisplayOrientation(result);
 
-                // Configura la vista previa de la cámara en la SurfaceView
                 camera.setPreviewDisplay(holder);
                 camera.startPreview();
             } catch (Exception e) {
@@ -197,7 +183,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        // Libera la cámara cuando la SurfaceView está destruida
         if (camera != null) {
             camera.stopPreview();
             camera.release();
@@ -219,17 +204,14 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private void onPictureTaken(byte[] data, Camera camera) {
         Bitmap originalBitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
 
-        // Obtener la orientación actual del dispositivo
         int rotation = getWindowManager().getDefaultDisplay().getRotation();
 
-        // Ajustar la orientación de la imagen capturada
         int rotationDegree = 0;
         switch (rotation) {
             case Surface.ROTATION_0:
                 rotationDegree = 90;
                 break;
             case Surface.ROTATION_90:
-                rotationDegree = 0;
                 break;
             case Surface.ROTATION_180:
                 rotationDegree = 270;
@@ -239,24 +221,19 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 break;
         }
 
-        // Rotar la imagen antes de guardarla
         capturedBitmap = rotateBitmap(originalBitmap, rotationDegree);
 
-        // Redimensionar el Bitmap a un tamaño más manejable
-        int targetWidth = 800; // Puedes ajustar este valor según tus necesidades
+        int targetWidth = 500;
         int targetHeight = (int) (capturedBitmap.getWidth() * (targetWidth / (float) capturedBitmap.getHeight()));
         capturedBitmap = Bitmap.createScaledBitmap(capturedBitmap, targetWidth, targetHeight, true);
 
-        // Guardar la imagen en la galería o en tu lógica de almacenamiento
         saveImageToExternalStorage(capturedBitmap);
 
-        // Actualizar el SurfaceView con la imagen capturada
         updateSurfaceView();
     }
 
 
     private void updateSurfaceView() {
-        // Muestra la imagen capturada en el SurfaceView
         if (capturedBitmap != null) {
             Canvas canvas = surfaceHolder.lockCanvas();
             if (canvas != null) {
